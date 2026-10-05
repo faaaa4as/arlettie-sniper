@@ -1,0 +1,11 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "functions": {
+    "api/snipe.js": { "maxDuration": 60 },
+    "api/report.js": { "maxDuration": 30 }
+  },
+  "crons": [
+    { "path": "/api/snipe", "schedule": "0 7 * * *" },
+    { "path": "/api/report", "schedule": "0 8 * * *" }
+  ]
+}

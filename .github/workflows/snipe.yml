@@ -1,0 +1,32 @@
+name: snipe
+
+# Hobby Vercel crons are daily-only, so this workflow drives the 30s cadence.
+# Each hourly run polls the endpoint every 30s for 55 minutes.
+on:
+  schedule:
+    - cron: '0 * * * *'
+  workflow_dispatch:
+
+concurrency:
+  group: snipe
+  cancel-in-progress: true
+
+jobs:
+  poll:
+    runs-on: ubuntu-latest
+    timeout-minutes: 59
+    steps:
+      - name: Poll every 30s
+        env:
+          URL: ${{ secrets.SNIPER_ENDPOINT }}
+        run: |
+          if [ -z "$URL" ]; then echo "missing SNIPER_ENDPOINT secret"; exit 1; fi
+          end=$(( $(date +%s) + 3300 ))   # 55 minutes
+          n=0
+          while [ "$(date +%s)" -lt "$end" ]; do
+            n=$((n+1))
+            code=$(curl -sS -o /tmp/r.json -w '%{http_code}' --max-time 25 "$URL" || echo 000)
+            echo "$(date -u +%H:%M:%S)Z check#$n http=$code $(head -c 160 /tmp/r.json)"
+            sleep 30
+          done
+          echo "loop finished after $n checks"
